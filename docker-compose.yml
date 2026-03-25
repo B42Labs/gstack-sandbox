@@ -1,0 +1,37 @@
+services:
+  claude-sandbox:
+    build:
+      context: .
+      dockerfile: Containerfile
+    container_name: gstack-sandbox
+    hostname: claude-sandbox
+    stdin_open: true
+    tty: true
+    volumes:
+      # Mount your target repository into /workspace
+      - ${REPO_PATH:-.}:/workspace
+      # Persist Go module cache between restarts
+      - go-mod-cache:/home/claude/go/pkg/mod
+      # Persist Claude Code config & conversation history
+      - claude-config:/home/claude/.claude
+      # Persist gstack installation across rebuilds
+      - gstack-skills:/home/claude/.claude/skills/gstack
+      # Persist uv/Serena cache
+      - uv-cache:/home/claude/.cache/uv
+      # Docker socket for kind (Kubernetes in Docker)
+      - ${HOME}/.docker/run/docker.sock:/var/run/docker.sock
+    environment:
+      # Optional: Context7 API key for higher rate limits
+      - CONTEXT7_API_KEY=${CONTEXT7_API_KEY:-}
+      # Optional: pass kubeconfig for cluster access
+      - KUBECONFIG=/home/claude/.kube/config
+      - TERM=xterm-256color
+    # Uncomment if you need cluster access from within the container:
+    # volumes (additional):
+    #   - ${HOME}/.kube:/home/claude/.kube:ro
+
+volumes:
+  go-mod-cache:
+  claude-config:
+  gstack-skills:
+  uv-cache:
